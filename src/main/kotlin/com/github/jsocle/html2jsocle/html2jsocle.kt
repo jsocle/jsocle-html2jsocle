@@ -5,7 +5,7 @@ import org.w3c.dom.Node
 import java.io.ByteArrayInputStream
 import kotlin.dom.*
 
-class JScoleHtmlElement(private val element: Element, private val depth: Int = 0) {
+class JSocleHtmlElement(private val element: Element, private val depth: Int = 0) {
     private val indent = (1..depth).map { "    " } .join(separator = "")
     private val tagName: String =
             if (depth == 0) element.getTagName().replaceAll("^[a-z]") { it.group().toUpperCase() }
@@ -60,7 +60,7 @@ class JScoleHtmlElement(private val element: Element, private val depth: Int = 0
                             return@map it.text
                         }
                         when (it) {
-                            is Element -> JScoleHtmlElement(it, depth + 1).render()
+                            is Element -> JSocleHtmlElement(it, depth + 1).render()
                             else -> throw IllegalArgumentException("" + it)
                         }
                     }
@@ -76,5 +76,5 @@ class JScoleHtmlElement(private val element: Element, private val depth: Int = 0
 
 fun convert(source: String): String {
     val document = parseXml(ByteArrayInputStream(source.toByteArray()))
-    return JScoleHtmlElement(document.documentElement!!).render()
+    return JSocleHtmlElement(document.documentElement!!).render()
 }
