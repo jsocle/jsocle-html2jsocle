@@ -1,5 +1,6 @@
 package com.github.jsocle.html2jsocle
 
+import com.google.common.base.CaseFormat
 import org.jsoup.Jsoup
 import org.jsoup.nodes
 import org.jsoup.nodes.Comment
@@ -9,8 +10,8 @@ import org.jsoup.nodes.TextNode
 
 val words = array("class")
 
-fun escapeReserveWord(name: String): String {
-    return if (name !in words) name else name + "_"
+fun escape(name: String): String {
+    return CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, if (name !in words) name else name + "_")
 }
 
 open class JSocleHtmlElement(private val element: nodes.Node, private val depth: Int = 0) {
@@ -39,7 +40,7 @@ open class JSocleHtmlElement(private val element: nodes.Node, private val depth:
         }
 
         val attrs = linkedMapOf<String, String>()
-        element.attributes().forEach { attrs[escapeReserveWord(it.key)] = it.value }
+        element.attributes().forEach { attrs[escape(it.key)] = it.value }
         if (singleTextNode) {
             attrs["text_"] = (element.childNodes()[0] as TextNode).text()
         }

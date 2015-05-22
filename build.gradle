@@ -21,6 +21,7 @@ dependencies {
     compile(
             "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version",
             'org.jsoup:jsoup:1.8.2',
+            'com.google.guava:guava:18.0',
 
             'com.github.jsocle:jsocle:f88b78e55c'
     )

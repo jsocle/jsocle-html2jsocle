@@ -99,7 +99,7 @@ class Html2JSocleTest {
         val kt = """Html(lang = "en") {
     head {
         meta(charset = "utf-8")
-        meta(http-equiv = "X-UA-Compatible", content = "IE=edge")
+        meta(httpEquiv = "X-UA-Compatible", content = "IE=edge")
     }
     body()
 }"""
@@ -121,6 +121,13 @@ class Html2JSocleTest {
     fun testClassAttribute() {
         val html = """<div class="col-md-12"></div>"""
         val kt = """Div(class_ = "col-md-12")"""
+        Assert.assertEquals(kt, convert(html))
+    }
+
+    Test
+    fun testHyphenAttribute() {
+        val html = """<div http-equiv="X-UA-Compatible" content = "IE=edge"></div>"""
+        val kt = """Div(httpEquiv = "X-UA-Compatible", content = "IE=edge")"""
         Assert.assertEquals(kt, convert(html))
     }
 }
