@@ -29,3 +29,9 @@ dependencies {
 sourceSets {
     main.java.srcDirs += 'src/main/kotlin'
 }
+apply plugin: 'application'
+applicationName = 'app'
+mainClassName = 'com.github.jsocle.html2jsocle.Html2jsoclePackage'
+
+
+task stage(dependsOn: ['clean', 'installApp'])
