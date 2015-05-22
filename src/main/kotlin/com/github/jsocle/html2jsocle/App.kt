@@ -8,13 +8,15 @@ public class App : JSocle() {
     init {
         route("/") { ->
             val html = request.parameter("html")?.trim() ?: ""
+            val includeBody = request.parameter("includeBody") != null
             val kt = if (html.length() == 0) "" else {
-                convert(html)
+                convert(html, includeBody = includeBody)
             }
             return@route Html {
                 body {
                     form(method = "post") {
-                        textarea(name = "html")
+                        textarea(name = "html", text_ = html)
+                        input(type = "checkbox", name = "includeBody", value = "includeBody", checked = if (includeBody) "true" else null)
                         button(text_ = "convert")
                         pre(text_ = kt)
                     }

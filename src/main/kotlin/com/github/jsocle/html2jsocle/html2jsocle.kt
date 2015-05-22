@@ -1,22 +1,31 @@
 package com.github.jsocle.html2jsocle
 
-import org.w3c.dom.Element
-import org.w3c.dom.Node
-import java.io.ByteArrayInputStream
-import kotlin.dom.*
+import org.jsoup.Jsoup
+import org.jsoup.nodes
+import org.jsoup.nodes.Comment
+import org.jsoup.nodes.DocumentType
+import org.jsoup.nodes.Node
+import org.jsoup.nodes.TextNode
 
-class JSocleHtmlElement(private val element: Element, private val depth: Int = 0) {
-    private val indent = (1..depth).map { "    " } .join(separator = "")
+val words = array("class")
+
+fun escapeReserveWord(name: String): String {
+    return if (name !in words) name else name + "_"
+}
+
+open class JSocleHtmlElement(private val element: nodes.Node, private val depth: Int = 0) {
+    private val defaultIndent = "    "
+    protected val indent: String = (1..depth).map { defaultIndent }.join(separator = "")
     private val tagName: String =
-            if (depth == 0) element.getTagName().replaceAll("^[a-z]") { it.group().toUpperCase() }
-            else element.getTagName()
+            if (depth == 0) element.nodeName().replaceAll("^[a-z]") { it.group().toUpperCase() }
+            else element.nodeName()
     private val attrs: Map<String, String>
     private val children: List<Node>
 
     init {
         var singleTextNode = false
-        if (element.children().size() == 1) {
-            if (element.children()[0].isText()) {
+        if (element.childNodes().size() == 1) {
+            if (element.childNodes()[0].isText()) {
                 singleTextNode = true
             }
         }
@@ -24,31 +33,29 @@ class JSocleHtmlElement(private val element: Element, private val depth: Int = 0
         if (singleTextNode) {
             children = listOf()
         } else {
-            children = element.children().filter { !it.isText() || it.text.trim().isNotEmpty() }
+            children = element.childNodes().filter {
+                !it.isText() || (it as TextNode).text().replaceAll("\\r?\\n", "").trim().isNotEmpty()
+            }
         }
 
         val attrs = linkedMapOf<String, String>()
-        val namedNodeMap = element.getAttributes()
-        for (i in (namedNodeMap.length - 1) downTo 0) {
-            val node = namedNodeMap.item(i)
-            attrs[node.nodeName] = node.text
-        }
+        element.attributes().forEach { attrs[escapeReserveWord(it.key)] = it.value }
         if (singleTextNode) {
-            attrs["text_"] = element.children()[0].text
+            attrs["text_"] = (element.childNodes()[0] as TextNode).text()
         }
         this.attrs = attrs
     }
 
 
-    fun render(): String {
+    open fun render(): String {
         var response = StringBuilder()
         response.append("$indent$tagName")
 
         if (attrs.size() > 0) {
             response.append(
                     attrs.toList()
-                            .map { "${it.first}=\"${it.second}\"" }
-                            .join(separator = " ", prefix = "(", postfix = ")")
+                            .map { "${it.first} = \"${it.second}\"" }
+                            .join(separator = ", ", prefix = "(", postfix = ")")
             )
         }
 
@@ -56,12 +63,10 @@ class JSocleHtmlElement(private val element: Element, private val depth: Int = 0
             response.append(" {\n")
             val childrenBody = children
                     .map {
-                        if (it.isText()) {
-                            return@map it.text
-                        }
                         when (it) {
-                            is Element -> JSocleHtmlElement(it, depth + 1).render()
-                            else -> throw IllegalArgumentException("" + it)
+                            is TextNode -> JSocleHtmlTextElement(it, depth + 1).render()
+                            is Comment -> JSocleHtmlComment(it, depth + 1).render()
+                            else -> JSocleHtmlElement(it, depth + 1).render()
                         }
                     }
                     .join("\n")
@@ -70,11 +75,49 @@ class JSocleHtmlElement(private val element: Element, private val depth: Int = 0
             response.append("$indent}")
         }
 
+        if (attrs.size() == 0 && children.size() == 0) {
+            response.append("()")
+        }
+
         return response.toString()
     }
 }
 
-fun convert(source: String): String {
-    val document = parseXml(ByteArrayInputStream(source.toByteArray()))
-    return JSocleHtmlElement(document.documentElement!!).render()
+private class JSocleHtmlTextElement(private val element: TextNode, depth: Int = 0) : JSocleHtmlElement(element, depth) {
+    override fun render(): String {
+        return "$indent+\"${element.text().trim()}\""
+    }
+}
+
+private class JSocleHtmlComment(private val element: Comment, depth: Int = 0) : JSocleHtmlElement(element, depth) {
+    override fun render(): String {
+        val comment = element.getData()
+        if (!comment.contains("\n")) {
+            return "$indent// ${comment.trim()}"
+        }
+        return StringBuilder {
+            append("$indent/*\n")
+            comment.split('\n').forEach { append("$indent  ${it.trim()}\n") }
+            append("$indent*/\n")
+        }.toString()
+    }
+}
+
+private fun Node.isText(): Boolean {
+    return this is TextNode
+}
+
+fun convert(source: String, includeBody: Boolean = false): String {
+    val document = Jsoup.parse(source)
+    val root = if (includeBody) document else document.body()
+    return root.childNodes()
+            .filter {
+                when (it) {
+                    is TextNode -> false
+                    is Comment -> false
+                    is DocumentType -> false
+                    else -> true
+                }
+            }
+            .map { JSocleHtmlElement(it).render() }.join("\n")
 }

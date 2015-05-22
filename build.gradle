@@ -20,7 +20,9 @@ dependencies {
 
     compile(
             "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version",
-            'com.github.jsocle:jsocle:5bddacac32'
+            'org.jsoup:jsoup:1.8.2',
+
+            'com.github.jsocle:jsocle:f88b78e55c'
     )
 }
 sourceSets {
