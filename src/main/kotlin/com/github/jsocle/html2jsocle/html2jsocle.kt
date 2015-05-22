@@ -10,8 +10,12 @@ import org.jsoup.nodes.TextNode
 
 val words = array("class")
 
+fun deHyphen(str: String): String {
+    return CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, str)
+}
+
 fun escape(name: String): String {
-    return CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, if (name !in words) name else name + "_")
+    return deHyphen(if (name !in words) name else name + "_")
 }
 
 open class JSocleHtmlElement(private val element: nodes.Node, private val depth: Int = 0) {
@@ -22,6 +26,7 @@ open class JSocleHtmlElement(private val element: nodes.Node, private val depth:
             else element.nodeName()
     private val attrs: Map<String, String>
     private val children: List<Node>
+    private val data = element.attributes().filter { it.key.startsWith("data-") }.map { it.key to it.value }.toMap()
 
     init {
         var singleTextNode = false
@@ -40,7 +45,7 @@ open class JSocleHtmlElement(private val element: nodes.Node, private val depth:
         }
 
         val attrs = linkedMapOf<String, String>()
-        element.attributes().forEach { attrs[escape(it.key)] = it.value }
+        element.attributes().filter { !it.key.startsWith("data-") }.forEach { attrs[escape(it.key)] = it.value }
         if (singleTextNode) {
             attrs["text_"] = (element.childNodes()[0] as TextNode).text()
         }
@@ -60,28 +65,41 @@ open class JSocleHtmlElement(private val element: nodes.Node, private val depth:
             )
         }
 
-        if (children.size() > 0) {
+        if (data.isNotEmpty() || children.isNotEmpty()) {
             response.append(" {\n")
-            val childrenBody = children
-                    .map {
-                        when (it) {
-                            is TextNode -> JSocleHtmlTextElement(it, depth + 1).render()
-                            is Comment -> JSocleHtmlComment(it, depth + 1).render()
-                            else -> JSocleHtmlElement(it, depth + 1).render()
+            if (data.isNotEmpty()) {
+                val dataBody = data
+                        .map { "$indent${defaultIndent}data_[\"${deHyphen(it.key.substring(5))}\"] = \"${it.value}\"" }
+                        .join("\n")
+                response.append(dataBody)
+                response.append("\n")
+            }
+            if (children.isNotEmpty()) {
+                val childrenBody = children
+                        .map {
+                            when (it) {
+                                is TextNode -> JSocleHtmlTextElement(it, depth + 1).render()
+                                is Comment -> JSocleHtmlComment(it, depth + 1).render()
+                                else -> JSocleHtmlElement(it, depth + 1).render()
+                            }
                         }
-                    }
-                    .join("\n")
-            response.append(childrenBody)
-            response.append("\n")
+                        .join("\n")
+                response.append(childrenBody)
+                response.append("\n")
+            }
             response.append("$indent}")
         }
 
-        if (attrs.size() == 0 && children.size() == 0) {
+        if (attrs.size() == 0 && !(data.isNotEmpty() || children.isNotEmpty())) {
             response.append("()")
         }
 
         return response.toString()
     }
+}
+
+fun Map<*, *>.isNotEmpty(): Boolean {
+    return !isEmpty()
 }
 
 private class JSocleHtmlTextElement(private val element: TextNode, depth: Int = 0) : JSocleHtmlElement(element, depth) {

@@ -130,5 +130,16 @@ class Html2JSocleTest {
         val kt = """Div(httpEquiv = "X-UA-Compatible", content = "IE=edge")"""
         Assert.assertEquals(kt, convert(html))
     }
+
+    Test
+    fun testDataAttributes() {
+        val html = """<div data-toggle="tooltip" data-alert-message="hello"><p></p></div>"""
+        val kt = """Div {
+    data_["toggle"] = "tooltip"
+    data_["alertMessage"] = "hello"
+    p()
+}"""
+        Assert.assertEquals(kt, convert(html))
+    }
 }
 
