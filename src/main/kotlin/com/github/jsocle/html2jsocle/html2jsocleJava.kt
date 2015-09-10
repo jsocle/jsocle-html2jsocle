@@ -6,6 +6,9 @@ import org.jsoup.nodes.Comment
 import org.jsoup.nodes.DocumentType
 import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode
+import java.util.*
+
+val defNames = ArrayList<String>()
 
 open class JSocleJavaHtmlElement(private val parentElement: String = "", private val element: nodes.Node, private val depth: Int = 0) {
     private val tagName: String = element.nodeName().replaceAll("^[a-z]") { it.group().toUpperCase() }
@@ -13,7 +16,7 @@ open class JSocleJavaHtmlElement(private val parentElement: String = "", private
     private val children: List<Node>
     private val data = element.attributes().filter { it.key.startsWith("data-") }.map { it.key to it.value }.toMap()
 
-    var defName: String = (tagName.charAt(0) + 32).toChar() + tagName.substring(1)
+    var defName: String = (tagName.charAt(0) + 32).toChar() + tagName.substring(1) + "_0"
 
     init {
         var singleTextNode = false
@@ -37,6 +40,18 @@ open class JSocleJavaHtmlElement(private val parentElement: String = "", private
             attrs["text_"] = (element.childNodes()[0] as TextNode).text()
         }
         this.attrs = attrs
+
+        var count: Int = 0
+        defNames.forEach {
+            if (it.substring(0, it.lastIndexOf("_") + 1) == defName.substring(0, defName.lastIndexOf("_") + 1)) {
+                count++
+            }
+        }
+        if (count != 0) {
+            defName = defName.substring(0, defName.lastIndexOf("_") + 1) + count
+        }
+        defNames.add(defName)
+
     }
 
     open fun render(): String {
