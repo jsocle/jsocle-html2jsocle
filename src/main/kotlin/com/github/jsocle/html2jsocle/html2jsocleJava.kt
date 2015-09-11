@@ -57,12 +57,29 @@ open class JSocleJavaHtmlElement(private val parentElement: String = "", private
     open fun render(): String {
         var response = StringBuilder()
 
-        response.append("$tagName $defName = new $tagName();")
+        var text_: String = ""
+        attrs.forEach {
+            if (it.getKey().endsWith("_")) {
+                text_ = it.getValue()
+                return@forEach
+            }
+        }
+        if (text_ == "") {
+            response.append("$tagName $defName = new $tagName();")
+        } else {
+            response.append("$tagName $defName = new $tagName(\"${text_}\");")
+        }
 
         if (attrs.size() > 0) {
             response.append(
                     attrs.toList()
-                            .map { "$defName.set${(it.first.charAt(0) - 32).toChar() + it.first.substring(1)}(\"${it.second}\");" }
+                            .filter {
+                                if (it.first.endsWith("_")) false
+                                else true
+                            }
+                            .map {
+                                "$defName.set${(it.first.charAt(0) - 32).toChar() + it.first.substring(1)}(\"${it.second}\");"
+                            }
                             .join(separator = "\n", prefix = "\n", postfix = "\n")
             )
         }
