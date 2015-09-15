@@ -124,19 +124,19 @@ private class JSocleJavaHtmlTextElement(private val parentElement: String, priva
     }
 }
 
-private class JSocleJavaHtmlComment(private val element: Comment, depth: Int = 0) : JSocleHtmlElement(element, depth) {
-    override fun render(): String {
-        val comment = element.getData()
-        if (!comment.contains("\n")) {
-            return "$indent// ${comment.trim()}"
-        }
-        return StringBuilder {
-            append("$indent/*\n")
-            comment.split('\n').forEach { append("$indent  ${it.trim()}\n") }
-            append("$indent*/\n")
-        }.toString()
-    }
-}
+//private class JSocleJavaHtmlComment(private val element: Comment, depth: Int = 0) : JSocleHtmlElement(element, depth) {
+//    override fun render(): String {
+//        val comment = element.getData()
+//        if (!comment.contains("\n")) {
+//            return "$indent// ${comment.trim()}"
+//        }
+//        return StringBuilder {
+//            append("$indent/*\n")
+//            comment.split('\n').forEach { append("$indent  ${it.trim()}\n") }
+//            append("$indent*/\n")
+//        }.toString()
+//    }
+//}
 
 fun convertJava(source: String, includeBody: Boolean = false): String {
     val document = Jsoup.parse(source)
