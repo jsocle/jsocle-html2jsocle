@@ -57,17 +57,15 @@ open class JSocleJavaHtmlElement(private val parentElement: String = "", private
     open fun render(): String {
         var response = StringBuilder()
 
-        var text_: String = ""
+        response.append("$tagName $defName = new $tagName();")
+
         attrs.forEach {
             if (it.getKey().endsWith("_")) {
-                text_ = it.getValue()
+                var text_ = it.getValue()
+                response.append("\n")
+                response.append("$defName.addNode(\"${text_}\");")
                 return@forEach
             }
-        }
-        if (text_ == "") {
-            response.append("$tagName $defName = new $tagName();")
-        } else {
-            response.append("$tagName $defName = new $tagName(\"${text_}\");")
         }
 
         if (attrs.size() > 0) {
@@ -98,7 +96,7 @@ open class JSocleJavaHtmlElement(private val parentElement: String = "", private
                         .map {
                             when (it) {
                                 is TextNode -> JSocleJavaHtmlTextElement(defName, it, depth + 1).render()
-                                //is Comment -> JSocleJavaHtmlComment(element, it, depth + 1).render()
+                                //is Comment -> JSocleJavaHtmlComment(it, depth + 1).render()
                                 else -> JSocleJavaHtmlElement(defName, it, depth + 1).render()
                             }
                         }
