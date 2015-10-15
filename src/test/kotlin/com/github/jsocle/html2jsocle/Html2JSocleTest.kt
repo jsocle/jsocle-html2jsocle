@@ -4,17 +4,17 @@ import org.junit.Assert
 import org.junit.Test
 
 class Html2JSocleTest {
-    Test
+    @Test
     fun testElement() {
         Assert.assertEquals("H1(text_ = \"Hello world!\")", convert("<h1>Hello world!</h1>"))
     }
 
-    Test
+    @Test
     fun testEmptyElement() {
         Assert.assertEquals("Img(src = \"../../favicon.ico\")", convert("<img src=\"../../favicon.ico\">"))
     }
 
-    Test
+    @Test
     fun testNested() {
         val html = """
 <div>
@@ -27,7 +27,7 @@ class Html2JSocleTest {
         Assert.assertEquals(kt, convert(html))
     }
 
-    Test
+    @Test
     fun testNestedMultiples() {
         val html = """
 <div>
@@ -42,7 +42,7 @@ class Html2JSocleTest {
         Assert.assertEquals(kt, convert(html))
     }
 
-    Test
+    @Test
     fun testHtml() {
         val html = """
 <html>
@@ -70,7 +70,7 @@ class Html2JSocleTest {
         Assert.assertEquals(kt, convert(html, includeBody = true))
     }
 
-    Test
+    @Test
     fun testTextPlus() {
         val html = """
 <div>
@@ -85,7 +85,7 @@ class Html2JSocleTest {
         Assert.assertEquals(kt, convert(html))
     }
 
-    Test
+    @Test
     fun testHtmlMeta() {
         val html = """
 <html lang="en">
@@ -106,7 +106,7 @@ class Html2JSocleTest {
         Assert.assertEquals(kt, convert(html, includeBody = true))
     }
 
-    Test
+    @Test
     fun testRemoveDocType() {
         val html = """<!DOCTYPE html><html lang="en"></html>"""
         val kt = """Html(lang = "en") {
@@ -117,21 +117,21 @@ class Html2JSocleTest {
         Assert.assertEquals(kt, convert(html, includeBody = true))
     }
 
-    Test
+    @Test
     fun testClassAttribute() {
         val html = """<div class="col-md-12"></div>"""
         val kt = """Div(class_ = "col-md-12")"""
         Assert.assertEquals(kt, convert(html))
     }
 
-    Test
+    @Test
     fun testHyphenAttribute() {
         val html = """<div http-equiv="X-UA-Compatible" content = "IE=edge"></div>"""
         val kt = """Div(httpEquiv = "X-UA-Compatible", content = "IE=edge")"""
         Assert.assertEquals(kt, convert(html))
     }
 
-    Test
+    @Test
     fun testDataAttributes() {
         val html = """<div data-toggle="tooltip" data-alert-message="hello"><p></p></div>"""
         val kt = """Div {

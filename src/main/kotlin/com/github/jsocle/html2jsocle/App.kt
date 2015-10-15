@@ -36,5 +36,5 @@ public class App : JSocle() {
 }
 
 fun main(args: Array<String>) {
-    App().run(config.port)
+    App().run()
 }

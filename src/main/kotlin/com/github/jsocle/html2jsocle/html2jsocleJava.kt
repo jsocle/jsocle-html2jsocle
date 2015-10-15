@@ -1,7 +1,6 @@
 package com.github.jsocle.html2jsocle
 
 import org.jsoup.Jsoup
-import org.jsoup.nodes
 import org.jsoup.nodes.Comment
 import org.jsoup.nodes.DocumentType
 import org.jsoup.nodes.Node
@@ -10,7 +9,7 @@ import java.util.*
 
 val defNames = ArrayList<String>()
 
-open class JSocleJavaHtmlElement(private val parentElement: String = "", private val element: nodes.Node, private val depth: Int = 0) {
+open class JSocleJavaHtmlElement(private val parentElement: String = "", private val element: Node, private val depth: Int = 0) {
     private val tagName: String = element.nodeName().replaceAll("^[a-z]") { it.group().toUpperCase() }
     private val attrs: Map<String, String>
     private val children: List<Node>

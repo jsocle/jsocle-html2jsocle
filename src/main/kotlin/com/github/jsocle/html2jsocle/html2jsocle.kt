@@ -2,13 +2,12 @@ package com.github.jsocle.html2jsocle
 
 import com.google.common.base.CaseFormat
 import org.jsoup.Jsoup
-import org.jsoup.nodes
 import org.jsoup.nodes.Comment
 import org.jsoup.nodes.DocumentType
 import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode
 
-val words = array("class")
+val words = arrayListOf("class")
 
 fun deHyphen(str: String): String {
     return CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, str)
@@ -18,7 +17,7 @@ fun escape(name: String): String {
     return deHyphen(if (name !in words) name else name + "_")
 }
 
-open class JSocleHtmlElement(private val element: nodes.Node, private val depth: Int = 0) {
+open class JSocleHtmlElement(private val element: Node, private val depth: Int = 0) {
     private val defaultIndent = "    "
     protected val indent: String = (1..depth).map { defaultIndent }.join(separator = "")
     private val tagName: String =
@@ -122,7 +121,7 @@ private class JSocleHtmlComment(private val element: Comment, depth: Int = 0) : 
     }
 }
 
-private fun Node.isText(): Boolean {
+internal fun Node.isText(): Boolean {
     return this is TextNode
 }
 
