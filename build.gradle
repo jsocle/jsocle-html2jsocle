@@ -1,7 +1,7 @@
 version = '0.0.1'
 buildscript {
-    ext.kotlin_version = '0.14.449'
-    //ext.kotlin_version = '0.12.1230'
+    ext.kotlin_version = '1.0.0-beta-1038'
+    //ext.kotlin_version = '0.14.449'
     repositories {
         mavenCentral()
     }
@@ -24,7 +24,7 @@ dependencies {
             'org.jsoup:jsoup:1.8.2',
             'com.google.guava:guava:18.0',
 
-            'com.github.jsocle:jsocle:0.0.7'
+            'com.github.jsocle:jsocle:0.0.17'
             //'com.github.jsocle:jsocle:3608c15014'
     )
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"

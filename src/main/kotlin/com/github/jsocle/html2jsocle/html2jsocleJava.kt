@@ -7,19 +7,21 @@ import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode
 import java.util.*
 
-val defNames = ArrayList<String>()
+var defNames = ArrayList<String>()
 
 open class JSocleJavaHtmlElement(private val parentElement: String = "", private val element: Node, private val depth: Int = 0) {
-    private val tagName: String = element.nodeName().replaceAll("^[a-z]") { it.group().toUpperCase() }
+    private var defName: String = element.nodeName().replace("^[a-z]".toRegex()) { it.value }
     private val attrs: Map<String, String>
     private val children: List<Node>
     private val data = element.attributes().filter { it.key.startsWith("data-") }.map { it.key to it.value }.toMap()
 
-    var defName: String = (tagName.charAt(0) + 32).toChar() + tagName.substring(1) + "_0"
+    var tagName: String = (defName[0] - 32).toChar() + defName.substring(1)
 
     init {
+        defName += "_0"
+
         var singleTextNode = false
-        if (element.childNodes().size() == 1) {
+        if (element.childNodes().size == 1) {
             if (element.childNodes()[0].isText()) {
                 singleTextNode = true
             }
@@ -29,7 +31,7 @@ open class JSocleJavaHtmlElement(private val parentElement: String = "", private
             children = listOf()
         } else {
             children = element.childNodes().filter {
-                !it.isText() || (it as TextNode).text().replaceAll("\\r?\\n", "").trim().isNotEmpty()
+                !it.isText() || (it as TextNode).text().replace("\\r?\\n", "").trim().isNotEmpty()
             }
         }
 
@@ -59,15 +61,15 @@ open class JSocleJavaHtmlElement(private val parentElement: String = "", private
         response.append("$tagName $defName = new $tagName();")
 
         attrs.forEach {
-            if (it.getKey().endsWith("_")) {
-                var text_ = it.getValue()
+            if (it.key.endsWith("_")) {
+                var text_ = it.value
                 response.append("\n")
-                response.append("$defName.addNode(\"${text_}\");")
+                response.append("$defName.addNode(\"$text_\");")
                 return@forEach
             }
         }
 
-        if (attrs.size() > 0) {
+        if (attrs.size > 0) {
             response.append(
                     attrs.toList()
                             .filter {
@@ -75,9 +77,9 @@ open class JSocleJavaHtmlElement(private val parentElement: String = "", private
                                 else true
                             }
                             .map {
-                                "$defName.set${(it.first.charAt(0) - 32).toChar() + it.first.substring(1)}(\"${it.second}\");"
+                                "$defName.set${(it.first[0] - 32).toChar() + it.first.substring(1)}(\"${it.second}\");"
                             }
-                            .join(separator = "\n", prefix = "\n", postfix = "\n")
+                            .joinToString(separator = "\n", prefix = "\n", postfix = "\n")
             )
         }
 
@@ -86,7 +88,7 @@ open class JSocleJavaHtmlElement(private val parentElement: String = "", private
             if (data.isNotEmpty()) {
                 val dataBody = data
                         .map { "data_[\"${deHyphen(it.key.substring(5))}\"] = \"${it.value}\"" }
-                        .join("\n")
+                        .joinToString("\n")
                 response.append(dataBody)
                 response.append("\n")
             }
@@ -95,22 +97,22 @@ open class JSocleJavaHtmlElement(private val parentElement: String = "", private
                         .map {
                             when (it) {
                                 is TextNode -> JSocleJavaHtmlTextElement(defName, it, depth + 1).render()
-                                //is Comment -> JSocleJavaHtmlComment(it, depth + 1).render()
+                            //is Comment -> JSocleJavaHtmlComment(it, depth + 1).render()
                                 else -> JSocleJavaHtmlElement(defName, it, depth + 1).render()
                             }
                         }
-                        .join("\n")
+                        .joinToString("\n")
                 response.append(childrenBody)
                 response.append("\n")
             }
         }
 
-        if (attrs.size() == 0 && !(data.isNotEmpty() || children.isNotEmpty())) {
-            response.append("()")
+        if (attrs.size == 0 && !(data.isNotEmpty() || children.isNotEmpty())) {
+            response.append("\n")
         }
 
         if (parentElement != "") {
-            response.append("${parentElement}.addNode(${defName});\n")
+            response.append("$parentElement.addNode($defName);\n")
         }
 
         return response.toString()
@@ -119,7 +121,7 @@ open class JSocleJavaHtmlElement(private val parentElement: String = "", private
 
 private class JSocleJavaHtmlTextElement(private val parentElement: String, private val element: TextNode, depth: Int = 0) : JSocleHtmlElement(element, depth) {
     override fun render(): String {
-        return "${parentElement}.addNode(new Label(\"${element.text().trim()}\"));\n"
+        return "$parentElement.addNode(new Label(\"${element.text().trim()}\"));\n"
     }
 }
 
@@ -138,17 +140,20 @@ private class JSocleJavaHtmlTextElement(private val parentElement: String, priva
 //}
 
 fun convertJava(source: String, includeBody: Boolean = false): String {
+
+    defNames = ArrayList<String>()
+
     val document = Jsoup.parse(source)
     val root = if (includeBody) document else document.body()
 
     return root.childNodes()
-            .filter {
-                when (it) {
-                    is TextNode -> false
-                    is Comment -> false
-                    is DocumentType -> false
-                    else -> true
-                }
+        .filter {
+            when (it) {
+                is TextNode -> false
+                is Comment -> false
+                is DocumentType -> false
+                else -> true
             }
-            .map { JSocleJavaHtmlElement("", it).render() }.join("\n")
+        }
+        .map { JSocleJavaHtmlElement("", it).render() }.joinToString("\n")
 }

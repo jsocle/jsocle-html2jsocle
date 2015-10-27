@@ -21,7 +21,7 @@ open class JSocleHtmlElement(private val element: Node, private val depth: Int =
     private val defaultIndent = "    "
     protected val indent: String = (1..depth).map { defaultIndent }.join(separator = "")
     private val tagName: String =
-            if (depth == 0) element.nodeName().replaceAll("^[a-z]") { it.group().toUpperCase() }
+            if (depth == 0) element.nodeName().replace("^[a-z]".toRegex()) { it.value }
             else element.nodeName()
     private val attrs: Map<String, String>
     private val children: List<Node>
@@ -39,7 +39,7 @@ open class JSocleHtmlElement(private val element: Node, private val depth: Int =
             children = listOf()
         } else {
             children = element.childNodes().filter {
-                !it.isText() || (it as TextNode).text().replaceAll("\\r?\\n", "").trim().isNotEmpty()
+                !it.isText() || (it as TextNode).text().replace("\\r?\\n", "").trim().isNotEmpty()
             }
         }
 
