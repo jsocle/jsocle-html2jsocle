@@ -6,13 +6,13 @@ import com.github.jsocle.html.elements.Label
 import com.github.jsocle.request
 import com.github.jsocle.requests.handlers.RequestHandler0
 
-public class App : JSocle() {
+object App : JSocle() {
     val index: RequestHandler0<Html> = route("/") { ->
 
         val html = request.parameter("html")?.trim() ?: ""
 
         var language = request.parameter("language")
-        if(language == null) language = "kotlin"
+        if (language == null) language = "kotlin"
 
         val includeBody = request.parameter("includeBody") != null
         val kt = if (html.length() == 0) "" else if (language == "kotlin") convert(html, includeBody = includeBody) else convertJava(html, includeBody = includeBody)
@@ -33,8 +33,9 @@ public class App : JSocle() {
             }
         }
     }
+
+    @JvmStatic fun main(args: Array<String>) {
+        run(Config.port)
+    }
 }
 
-fun main(args: Array<String>) {
-    App().run()
-}

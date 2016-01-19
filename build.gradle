@@ -34,7 +34,7 @@ sourceSets {
 }
 apply plugin: 'application'
 applicationName = 'app'
-mainClassName = 'com.github.jsocle.html2jsocle.Html2jsoclePackage'
+mainClassName = 'com.github.jsocle.html2jsocle.App'
 
 
 task stage(dependsOn: ['clean', 'installApp'])
